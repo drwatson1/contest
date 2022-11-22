@@ -1,61 +1,47 @@
-﻿// complexity: O(3*N + n * log n)
+﻿// complexity: O(max(n, M)) where M - max(abs(diffs))
 // space: O(n)
 long MinSumSquareDiff(int[] nums1, int[] nums2, int k1, int k2)
 {
     int k = k1 + k2;
     int n = nums1.Length;
-    var diffs = new List<int>();
+    var diffs = new int[n];
 
     // O(n)
+    int max = 0;
     for (int i = 0; i < nums1.Length; ++i)
     {
-        diffs.Add(Math.Abs(nums1[i] - nums2[i]));
+        diffs[i] = Math.Abs(nums1[i] - nums2[i]);
+        if(diffs[i] > max )
+        {
+            max = diffs[i];
+        }
     }
 
-    if (k > 0)
+    var buckets = new int[max+1];
+    for(int i = 0; i < diffs.Length; ++i)
     {
-        // O(n log n)
-        diffs.Sort();
+        buckets[diffs[i]] = ++buckets[diffs[i]];
+    }
 
-        int begin = n;
-        int k_delta = k;
+    var k_left = k;
+    for(int i = buckets.Length-1; i > 0 && k > 0; --i)
+    {
+        if( buckets[i] == 0)
         {
-            // O(n)
-            int j = diffs.Count - 1;
-            int k_sum = 0;
-            while (j >= 0 && k_sum < k)
-            {
-                if (j == 0 || diffs[j - 1] < diffs[j])
-                {
-                    var diff = j > 0 ? diffs[j] - diffs[j - 1] : diffs[j];
-                    k_delta = Math.Min(diff * (n - j), k - k_sum);
-                    k_sum += k_delta;
-                    begin = j;
-                }
-                --j;
-            }
+            continue;
         }
 
-        int target_val = diffs[begin] - (k_delta / (n - begin));
-        int minus_one_count = k_delta % (n - begin);
-
-        for (int i = begin; i < n; i++)
-        {
-            int d = 0;
-            if (minus_one_count > 0)
-            {
-                d = 1;
-                --minus_one_count;
-            }
-            diffs[i] = target_val - d;
-        }
+        var d = Math.Min(k_left, buckets[i]);
+        buckets[i] = buckets[i] - d;
+        buckets[i-1] = buckets[i - 1] + d;
+        k_left -= d;
     }
 
     // O(n)
     long sum = 0;
-    for (int i = 0; i < diffs.Count; ++i)
+    for (int i = 0; i < buckets.Length; ++i)
     {
-        sum += (long)diffs[i] * diffs[i];
+        sum += (long)buckets[i] * i * i;
     }
 
     return sum;
