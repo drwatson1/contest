@@ -1,8 +1,9 @@
-﻿// complexity: O(4*N + n * log n)
-// space: O(2*n)
+﻿// complexity: O(3*N + n * log n)
+// space: O(n)
 long MinSumSquareDiff(int[] nums1, int[] nums2, int k1, int k2)
 {
     int k = k1 + k2;
+    int n = nums1.Length;
     var diffs = new List<int>();
 
     // O(n)
@@ -11,44 +12,43 @@ long MinSumSquareDiff(int[] nums1, int[] nums2, int k1, int k2)
         diffs.Add(Math.Abs(nums1[i] - nums2[i]));
     }
 
-    // O(n log n)
-    diffs.Sort();
-
-    var diff_pairs = new List<(int, int, int, int)>();
-    int b = diffs.Count;
-
+    if (k > 0)
     {
-        // O(n)
-        int j = diffs.Count - 1;
-        while (j >= 0 && k > 0)
+        // O(n log n)
+        diffs.Sort();
+
+        int begin = n;
+        int k_delta = k;
         {
-            if (j == 0 || diffs[j - 1] < diffs[j])
+            // O(n)
+            int j = diffs.Count - 1;
+            int k_sum = 0;
+            while (j >= 0 && k_sum < k)
             {
-                var diff = j > 0 ? Math.Min(diffs[j] - diffs[j - 1], Math.Min(diffs[j], k)) : Math.Min(diffs[j], k);
-                var c = diffs.Count - j;
-                var k_delta = Math.Min(c * diff, k);
-                k -= k_delta;
-                diff_pairs.Add((j, b, diff, k_delta));
-                b = j;
+                if (j == 0 || diffs[j - 1] < diffs[j])
+                {
+                    var diff = j > 0 ? diffs[j] - diffs[j - 1] : diffs[j];
+                    k_delta = Math.Min(diff * (n - j), k - k_sum);
+                    k_sum += k_delta;
+                    begin = j;
+                }
+                --j;
             }
-            --j;
         }
-    }
 
-    int sum_diff = 0;
-    // O(n)
-    for (int i = diff_pairs.Count - 1; i >= 0; --i)
-    {
-        var p = diff_pairs[i];
-        int k_delta = p.Item4;
-        int diff = p.Item3;
-        for (int j = p.Item1; j < p.Item2 && k_delta > 0; ++j)
+        int target_val = diffs[begin] - (k_delta / (n - begin));
+        int minus_one_count = k_delta % (n - begin);
+
+        for (int i = begin; i < n; i++)
         {
-            var delta = Math.Min(diffs[j], Math.Min(diff, k_delta));
-            diffs[j] = diffs[j] - delta;
-            k_delta -= delta;
+            int d = 0;
+            if (minus_one_count > 0)
+            {
+                d = 1;
+                --minus_one_count;
+            }
+            diffs[i] = target_val - d;
         }
-        sum_diff += diff;
     }
 
     // O(n)
@@ -68,6 +68,42 @@ int k2 = 0;
 long expected = 0;
 long result = 0;
 
+nums1 = new int[] { 1, 4, 10 };
+nums2 = new int[] { 4, 7, 13 };
+k1 = 3;
+k2 = 6;
+expected = 0;
+
+result = MinSumSquareDiff(nums1, nums2, k1, k2);
+Console.WriteLine($"[{string.Join(", ", nums1)}] - [{string.Join(", ", nums2)}], k1 = {k1}, k2 = {k2} => {result} (expected {expected})");
+
+nums1 = new int[] { 1, 4, 10 };
+nums2 = new int[] { 4, 7, 13 };
+k1 = 2;
+k2 = 2;
+expected = 9;
+
+result = MinSumSquareDiff(nums1, nums2, k1, k2);
+Console.WriteLine($"[{string.Join(", ", nums1)}] - [{string.Join(", ", nums2)}], k1 = {k1}, k2 = {k2} => {result} (expected {expected})");
+
+nums1 = new int[] { 1, 4, 10, 12 };
+nums2 = new int[] { 5, 8, 6, 9 };
+k1 = 9;
+k2 = 5;
+expected = 1;
+
+result = MinSumSquareDiff(nums1, nums2, k1, k2);
+Console.WriteLine($"[{string.Join(", ", nums1)}] - [{string.Join(", ", nums2)}], k1 = {k1}, k2 = {k2} => {result} (expected {expected})");
+
+nums1 = new int[] { 1, 4, 10, 12 };
+nums2 = new int[] { 5, 8, 6, 9 };
+k1 = 4;
+k2 = 5;
+expected = 10;
+
+result = MinSumSquareDiff(nums1, nums2, k1, k2);
+Console.WriteLine($"[{string.Join(", ", nums1)}] - [{string.Join(", ", nums2)}], k1 = {k1}, k2 = {k2} => {result} (expected {expected})");
+
 nums1 = new int[] { 1, 4, 10, 12 };
 nums2 = new int[] { 5, 8, 6, 9 };
 k1 = 10;
@@ -77,6 +113,14 @@ expected = 0;
 result = MinSumSquareDiff(nums1, nums2, k1, k2);
 Console.WriteLine($"[{string.Join(", ", nums1)}] - [{string.Join(", ", nums2)}], k1 = {k1}, k2 = {k2} => {result} (expected {expected})");
 
+nums1 = new int[] { 1, 4, 10, 12, 15 };
+nums2 = new int[] { 5, 8, 6, 9, 12 };
+k1 = 11;
+k2 = 5;
+expected = 2;
+
+result = MinSumSquareDiff(nums1, nums2, k1, k2);
+Console.WriteLine($"[{string.Join(", ", nums1)}] - [{string.Join(", ", nums2)}], k1 = {k1}, k2 = {k2} => {result} (expected {expected})");
 
 nums1 = new int[] { 1, 4, 10, 12 };
 nums2 = new int[] { 5, 8, 6, 9 };
